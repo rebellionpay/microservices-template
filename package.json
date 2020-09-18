@@ -2,6 +2,10 @@
   "name": "nest-ms-template",
   "version": "0.1.0",
   "description": "A microservice schematics for nodejs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rebellionpay/microservices-template"
+  },
   "scripts": {
     "postbuild": "npm run copy:collection && npm run copy:schematics",
     "build": "rm -rf dist && tsc --project tsconfig.schematics.json",
