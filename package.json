@@ -1,7 +1,11 @@
 {
-  "name": "nest-ms-template",
+  "name": "@rebellionpay/nest-ms-template",
   "version": "0.1.0",
   "description": "A microservice schematics for nodejs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rebellionpay/microservices-template.git"
+  },
   "scripts": {
     "postbuild": "npm run copy:collection && npm run copy:schematics",
     "build": "rm -rf dist && tsc --project tsconfig.schematics.json",
@@ -18,7 +22,7 @@
   "keywords": [
     "schematics"
   ],
-  "author": "",
+  "author": "Rebellion Pay",
   "license": "MIT",
   "schematics": "./dist/collection.json",
   "dependencies": {
@@ -43,5 +47,12 @@
     "ts-node": "^9.0.0",
     "typescript": "^4.0.2"
   },
-  "publishConfig": { "registry": "https://npm.pkg.github.com/" }
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "bugs": {
+    "url": "https://github.com/rebellionpay/microservices-template/issues"
+  },
+  "homepage": "https://github.com/rebellionpay/microservices-template#readme",
+  "main": "gulpfile.js"
 }
