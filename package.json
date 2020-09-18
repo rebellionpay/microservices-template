@@ -1,0 +1,47 @@
+{
+  "name": "nest-ms-template",
+  "version": "0.1.0",
+  "description": "A microservice schematics for nodejs",
+  "scripts": {
+    "postbuild": "npm run copy:collection && npm run copy:schematics",
+    "build": "rm -rf dist && tsc --project tsconfig.schematics.json",
+    "copy:collection": "cpx src/collection.json dist && cpx 'src/schematics/**/schema.json' dist/schematics",
+    "copy:schematics": "cpx 'src/schematics/**/files/**/*.*' dist/schematics && cpx 'src/schematics/**/files/**/.*' dist/schematics && cpx 'src/schematics/**/files/**/.*/**' dist/schematics",
+    "clean": "gulp clean:src",
+    "lint": "eslint '{src,test}/**/*.ts' --fix",
+    "prepublish:npm": "npm run build",
+    "publish:npm": "npm publish --access public",
+    "test": "npm run clean && NODE_ENV=test jest -w 1 --no-cache --config jest.json",
+    "test:dev": "NODE_ENV=test npm run -s test -- --watchAll",
+    "update": "npm-check -u"
+  },
+  "keywords": [
+    "schematics"
+  ],
+  "author": "",
+  "license": "MIT",
+  "schematics": "./dist/collection.json",
+  "dependencies": {
+    "@angular-devkit/core": "^10.1.2",
+    "@angular-devkit/schematics": "^10.1.2",
+    "inquirer": "^7.3.3",
+    "rxjs": "^6.6.3"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^7.3.1",
+    "@types/jasmine": "^3.5.14",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.11.1",
+    "cpx": "^1.5.0",
+    "gulp": "^4.0.2",
+    "gulp-clean": "^0.4.0",
+    "jasmine": "^3.6.1",
+    "jest": "^26.4.2",
+    "jest-circus": "^26.4.2",
+    "npm-check": "^5.9.2",
+    "ts-jest": "^26.3.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" }
+}

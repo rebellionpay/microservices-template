@@ -1,0 +1,15 @@
+{
+  "$schema": "../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "app": {
+      "factory": "./schematics/app/application.factory#main",
+      "description": "Create a Nest application.",
+      "schema": "./schematics/app/schema.json"
+    },
+    "ctlr":{
+      "factory": "./schematics/ctlr/controller.factory#main",
+      "description": "Create a Nest controller",
+      "schema": "./schematics/ctlr/schema.json"
+    }
+  }
+}

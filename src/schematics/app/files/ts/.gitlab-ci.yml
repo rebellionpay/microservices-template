@@ -1,0 +1,51 @@
+variables:
+  REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
+  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_DRIVER: overlay2
+  # See https://github.com/docker-library/docker/pull/166
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - setup
+  - lint
+  - test
+  - build
+
+test:
+  stage: test
+  tags:
+    - microservices
+  before_script:
+    - npm i
+  script:
+    - npm run test
+
+eslint:
+  stage: lint
+  tags:
+    - microservices
+  before_script:
+    - npm i
+  script:
+    # Run ESLint
+    - node ./node_modules/eslint/bin/eslint "{src,apps,libs,test}/**/*.ts"
+
+build:
+  image: docker:latest
+  stage: build
+  tags:
+    - docker
+  services:
+    - name: docker:dind
+      entrypoint: ["env", "-u", "DOCKER_HOST"]
+      command: ["dockerd-entrypoint.sh"]
+  before_script:
+    - apk update
+    - apk add --no-cache curl py3-setuptools jq python3 py-pip
+    - pip install awscli
+  script:
+    - aws --region $AWS_DEFAULT_REGION ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL_PRE
+    - docker build -t $REPOSITORY_URL:$CI_COMMIT_SHA .
+    - docker push $REPOSITORY_URL:$CI_COMMIT_SHA
+  only:
+    - master
