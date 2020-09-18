@@ -4,6 +4,7 @@
 .idea/
 jsconfig.json
 .vscode/
+!src/**/.vscode
 
 # Misc
 node_modules/
