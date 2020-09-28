@@ -1,6 +1,6 @@
 {
   "name": "@rebellionpay/nest-ms-template",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A microservice schematics for nodejs",
   "repository": {
     "type": "git",
@@ -48,7 +48,7 @@
     "typescript": "^4.0.2"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   },
   "bugs": {
     "url": "https://github.com/rebellionpay/microservices-template/issues"
