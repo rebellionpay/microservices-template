@@ -1,6 +1,6 @@
 {
   "name": "@rebellionpay/nest-ms-template",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A microservice schematics for nodejs",
   "repository": {
     "type": "git",
