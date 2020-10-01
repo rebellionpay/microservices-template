@@ -1,3 +1,3 @@
-# Ignores TypeScript files, but keeps definitions.
-*.ts
-!*.d.ts
+# Ignore src folder, the good shit is in dist/
+
+src/
