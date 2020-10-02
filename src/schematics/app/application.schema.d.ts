@@ -18,7 +18,7 @@ export interface ApplicationOptions {
   /**
    * Nest application license type
    */
-  license?: string;
+  license: string;
   /**
    * Nest application destination directory
    */

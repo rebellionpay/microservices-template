@@ -19,6 +19,8 @@ describe('Application Factory', () => {
   it('should manage name only', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: true,
@@ -69,6 +71,8 @@ describe('Application Factory', () => {
   it('should manage name to dasherize', async () => {
     const options: ApplicationOptions = {
       name: 'awesomeProject',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: true,
@@ -120,6 +124,8 @@ describe('Application Factory', () => {
   it('should manage destination directory', async () => {
     const options: ApplicationOptions = {
       name: '@scope/package',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       directory: 'scope-package',
       transport: 'NATS',
@@ -172,6 +178,8 @@ describe('Application Factory', () => {
   it('should generate exception filter when not a pure app', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: false,
@@ -192,6 +200,8 @@ describe('Application Factory', () => {
   it('should generate mongo config service when persistence is mongo', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: false,
@@ -213,6 +223,8 @@ describe('Application Factory', () => {
   it('should generate typeorm config service when persistence is mongo', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: false,
@@ -234,6 +246,8 @@ describe('Application Factory', () => {
   it('should create an hybrid app when pure is set to false', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: false,
@@ -321,6 +335,8 @@ describe('Application Factory', () => {
   it('should create a pure microservice app when pure is set to true', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
       port: 3000,
       transport: 'NATS',
       pure: true,

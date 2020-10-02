@@ -12,6 +12,23 @@ export default {
       }
     },
     {
+      type: 'input',
+      name: 'author',
+      message: 'Who is the author of the project?',
+      default: 'Rebellion Pay <backend@rebellionpay.com>'
+    },
+    {
+      type: 'input',
+      name: 'description',
+      message: 'Which is the description of the project?',
+    },
+    {
+      type: 'input',
+      name: 'license',
+      message: 'Which is the project license?',
+      default: 'MIT'
+    },
+    {
       type: 'number',
       name: 'port',
       message: 'In which port will it run?',

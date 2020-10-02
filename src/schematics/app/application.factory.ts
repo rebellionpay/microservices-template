@@ -15,7 +15,6 @@ import {
   DEFAULT_AUTHOR,
   DEFAULT_DESCRIPTION,
   DEFAULT_VERSION,
-  DEFAULT_LICENSE,
 } from '../defaults';
 import { ApplicationOptions } from './application.schema';
 import schema from './schema';
@@ -75,8 +74,6 @@ function transform(options: ApplicationOptions): ApplicationOptions {
   target.language = 'ts';
   target.name = resolvePackageName(target.name);
   target.version = !!target.version ? target.version : DEFAULT_VERSION;
-
-  target.license = target.license || DEFAULT_LICENSE;
 
   target.packageManager =
     !target.packageManager || target.packageManager === 'undefined'
