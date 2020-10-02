@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <%= name %>
+  namespace: <%= kubernetesNamespace %><% 
+  if (useSpinnaker) { %>
+  annotations:
+    traffic.spinnaker.io/load-balancers: '["service <%= name %>"]'<%
+  } %>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: <%= name %>
+  template:
+    metadata:
+      labels:
+        component: <%= name %>
+        nats-client: "true"
+    spec:
+      containers:
+        - name: <%= name %>
+          image: ${ trigger['payload']['dockerImage'] }
+          reources:
+            limits:
+              cpu: 100m
+              memory: 256M
+          startupProbe:
+            httpGet:
+              path: /status
+              port: <%= port %>
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: <%= port %>
+              initialDelaySeconds: 5
+              periodSeconds: 5
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: <%= name %>
+  namespace: rebellionlt
+spec:
+  ports:
+    - name: http
+      port: <%= port %>
+  selector:
+    app: <%= name %>
+  type: ClusterIP
+  

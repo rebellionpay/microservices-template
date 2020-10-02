@@ -4,9 +4,13 @@ export interface ApplicationOptions {
    */
   name: string;
   /**
+   * Nest application port
+   */
+  port: number;
+  /**
    * Nest application author.
    */
-  author?: string;
+  author: string;
   /**
    * Nest application description.
    */
@@ -55,4 +59,16 @@ export interface ApplicationOptions {
    * Database type to use
    */
   persistenceDB?: 'mongodb' | 'postgresql' | 'mysql' | 'other';
+  /**
+   * Wheter to reference spinnaker for CD or not
+   */
+  useSpinnaker: boolean;
+  /**
+   * Spinnaker API url
+   */
+  spinnakerUrl?: string;
+  /**
+   * Kubernetes namespace to put in the manifest
+   */
+  kubernetesNamespace: string;
 }

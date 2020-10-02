@@ -86,6 +86,11 @@ function transform(options: ApplicationOptions): ApplicationOptions {
   target.devDependencies = !!target.devDependencies
     ? target.devDependencies
     : '';
+
+  if (target.spinnakerUrl !== undefined && target.spinnakerUrl.endsWith('/')) {
+    target.spinnakerUrl = target.spinnakerUrl.slice(0, target.spinnakerUrl.length - 1);
+  }
+
   return target;
 }
 

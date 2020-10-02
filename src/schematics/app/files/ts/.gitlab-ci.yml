@@ -1,24 +1,11 @@
 variables:
   REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
-  DOCKER_HOST: tcp://docker:2375/
-  DOCKER_DRIVER: overlay2
-  # See https://github.com/docker-library/docker/pull/166
-  DOCKER_TLS_CERTDIR: ""
 
 stages:
-  - setup
   - lint
   - test
   - build
-
-test:
-  stage: test
-  tags:
-    - microservices
-  before_script:
-    - npm i
-  script:
-    - npm run test
+  <% if(useSpinnaker) { %>- notify-spinnaker<% } %>
 
 eslint:
   stage: lint
@@ -29,23 +16,46 @@ eslint:
   script:
     # Run ESLint
     - node ./node_modules/eslint/bin/eslint "{src,apps,libs,test}/**/*.ts"
+  except:
+    - triggers
+
+test:
+  stage: test
+  tags:
+    - microservices
+  before_script:
+    - npm i
+  script:
+    - npm run test
+  except:
+    - triggers
 
 build:
-  image: docker:latest
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   stage: build
   tags:
     - docker
-  services:
-    - name: docker:dind
-      entrypoint: ["env", "-u", "DOCKER_HOST"]
-      command: ["dockerd-entrypoint.sh"]
-  before_script:
-    - apk update
-    - apk add --no-cache curl py3-setuptools jq python3 py-pip
-    - pip install awscli
   script:
-    - aws --region $AWS_DEFAULT_REGION ecr get-login-password | docker login --username AWS --password-stdin $ECR_URL_PRE
-    - docker build -t $REPOSITORY_URL:$CI_COMMIT_SHA .
-    - docker push $REPOSITORY_URL:$CI_COMMIT_SHA
+    - mkdir -p /kaniko/.docker
+    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
   only:
-    - master
+    - web
+    - triggers
+
+<% if(useSpinnaker) { 
+%>notify-spinnaker:
+  image:
+    name: curlimages/curl:latest
+    entrypoint: [""]
+  stage: notify-spinnaker
+  tags:
+    - docker
+  script:
+    - curl --location --request POST "<%= spinnakerUrl %>/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\"}"
+  only:
+    - web
+    - triggers
+<% } %>
