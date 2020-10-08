@@ -1,3 +1,15 @@
+.build_template: &build_definition
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: build
+  tags:
+    - docker
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+
 variables:
   REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
 
@@ -16,8 +28,8 @@ eslint:
   script:
     # Run ESLint
     - node ./node_modules/eslint/bin/eslint "{src,apps,libs,test}/**/*.ts"
-  except:
-    - triggers
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
 
 test:
   stage: test
@@ -27,23 +39,23 @@ test:
     - npm i
   script:
     - npm run test
-  except:
-    - triggers
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
 
-build:
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  stage: build
-  tags:
-    - docker
-  script:
-    - mkdir -p /kaniko/.docker
-    - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
-  only:
-    - web
-    - triggers
+build:staging:
+  <<: *build_definition
+  before_script:
+    - cat $ENV_STAGING > .env
+  rules:
+    - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
+    - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
+
+build:production:
+  <<: *build_definition
+  before_script:
+    - cat $ENV_PRODUCTION > .env
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
 
 <% if(useSpinnaker) { 
 %>notify-spinnaker:
@@ -54,8 +66,8 @@ build:
   tags:
     - docker
   script:
-    - curl --location --request POST "<%= spinnakerUrl %>/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\"}"
-  only:
-    - web
-    - triggers
+    - curl --location --request POST "<%= spinnakerUrl %>/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
+  rules:
+    - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
 <% } %>
