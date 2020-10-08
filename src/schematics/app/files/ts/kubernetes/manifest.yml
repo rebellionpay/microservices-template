@@ -15,16 +15,19 @@ spec:
   template:
     metadata:
       labels:
-        component: <%= name %>
+        app: <%= name %>
         nats-client: "true"
     spec:
       containers:
         - name: <%= name %>
           image: ${ trigger['payload']['dockerImage'] }
-          reources:
-            limits:
-              cpu: 100m
+          resources:
+            requests:
+              cpu: 300m
               memory: 256M
+            limits:
+              cpu: 500m
+              memory: 512M
           startupProbe:
             httpGet:
               path: /status
@@ -51,6 +54,6 @@ spec:
     - name: http
       port: <%= port %>
   selector:
-    app: <%= name %>
+    component: <%= name %>
   type: ClusterIP
   
