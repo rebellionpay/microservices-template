@@ -1,3 +1,18 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: <%= name %>
+  namespace: rebellionlt
+spec:
+  ports:
+    - name: http
+      port: <%= port %>
+  selector:
+    component: <%= name %>
+  type: ClusterIP
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -43,19 +58,3 @@ spec:
               port: <%= port %>
               initialDelaySeconds: 5
               periodSeconds: 5
-
----
-
-kind: Service
-apiVersion: v1
-metadata:
-  name: <%= name %>
-  namespace: rebellionlt
-spec:
-  ports:
-    - name: http
-      port: <%= port %>
-  selector:
-    component: <%= name %>
-  type: ClusterIP
-  
