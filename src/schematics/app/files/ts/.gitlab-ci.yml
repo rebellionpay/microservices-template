@@ -8,7 +8,7 @@
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID
 
 variables:
   REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
@@ -55,6 +55,8 @@ build:production:
   before_script:
     - cat $ENV_PRODUCTION > .env
   rules:
+    - if: $CI_COMMIT_REF_SLUG !~ /^master?$/ && $CI_COMMIT_TAG == null
+      when: never
     - if: $CI_PIPELINE_SOURCE == "web"
 
 <% if(useSpinnaker) { 
@@ -66,7 +68,7 @@ build:production:
   tags:
     - docker
   script:
-    - curl --location --request POST "<%= spinnakerUrl %>/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
+    - curl --location --request POST "https://api.spinnaker.rebellionpay.com/webhooks/webhook/ms-payments" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"-"${CI_PIPELINE_ID}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
   rules:
     - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
