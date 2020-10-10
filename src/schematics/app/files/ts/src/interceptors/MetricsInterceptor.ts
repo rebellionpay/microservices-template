@@ -52,7 +52,7 @@ export class MetricsInterceptor implements NestInterceptor {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
 
-            this.metrics.send('ms-auth',
+            this.metrics.send('<%= name >',
               {
                 statusCode,
                 method,
@@ -90,7 +90,7 @@ export class MetricsInterceptor implements NestInterceptor {
           }),
           finalize(() => {
             if(this.configService.get<string>('NODE_ENV') === 'production') {
-              this.metrics.send('ms-auth',
+              this.metrics.send('<%= name >',
                 { ...natsTopic, responseTime: Date.now() - timeDate }
               ).catch(err => {
                 this.logger.error('[METRICS] | Error sending metrics', err);
