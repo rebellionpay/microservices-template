@@ -6,7 +6,6 @@ export const DEFAULT_LIB_PATH = 'libs';
 export const DEFAULT_APPS_PATH = 'apps';
 export const DEFAULT_DIR_ENTRY_APP = 'main';
 export const TEST_ENV = 'test';
-export const DEFAULT_LICENSE = 'MIT';
 export const PROJECT_TYPE = {
   APPLICATION: 'app',
   CONTROLLER: 'ctrl',

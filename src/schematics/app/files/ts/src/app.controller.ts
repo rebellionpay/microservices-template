@@ -4,6 +4,7 @@ import { Logger } from 'winston';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { MicroserviceMessage } from './interface/MicroserviceMessage';
 import { AppService } from './app.service';
+import { get } from 'http';
 <% if (!pure) { %>import { MessageService } from './message/message.service';
 import { MetricsInterceptor } from './interceptors/MetricsInterceptor';
 import { InjectMetadataInterceptor } from './interceptors/InjectMetadataInterceptor';
@@ -37,4 +38,9 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }<% } %>
+
+  @Get('/status')
+  getStatus(): string {
+    return '[OK]';
+  }
 }

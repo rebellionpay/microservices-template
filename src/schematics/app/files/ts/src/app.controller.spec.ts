@@ -124,6 +124,12 @@ describe('AppController', () => {
   });
   <% } %>
 
+  describe('getStatus', () => {
+    it('should return [OK]', () => {
+      expect(appController.getStatus()).toBe('[OK]');
+    });
+  });
+
   afterAll(async () => {
     if(app) {
       await app.close();

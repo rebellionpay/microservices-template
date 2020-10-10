@@ -15,7 +15,6 @@ import {
   DEFAULT_AUTHOR,
   DEFAULT_DESCRIPTION,
   DEFAULT_VERSION,
-  DEFAULT_LICENSE,
 } from '../defaults';
 import { ApplicationOptions } from './application.schema';
 import schema from './schema';
@@ -76,8 +75,6 @@ function transform(options: ApplicationOptions): ApplicationOptions {
   target.name = resolvePackageName(target.name);
   target.version = !!target.version ? target.version : DEFAULT_VERSION;
 
-  target.license = target.license || DEFAULT_LICENSE;
-
   target.packageManager =
     !target.packageManager || target.packageManager === 'undefined'
       ? 'npm'
@@ -86,6 +83,11 @@ function transform(options: ApplicationOptions): ApplicationOptions {
   target.devDependencies = !!target.devDependencies
     ? target.devDependencies
     : '';
+
+  if (target.spinnakerUrl !== undefined && target.spinnakerUrl.endsWith('/')) {
+    target.spinnakerUrl = target.spinnakerUrl.slice(0, target.spinnakerUrl.length - 1);
+  }
+
   return target;
 }
 
