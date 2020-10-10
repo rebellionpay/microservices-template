@@ -19,9 +19,15 @@ describe('Application Factory', () => {
   it('should manage name only', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: true,
-      persistence: false
+      persistence: false,
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -41,6 +47,7 @@ describe('Application Factory', () => {
       '/project/tsconfig.build.json',
       '/project/tsconfig.json',
       '/project/.vscode/launch.json',
+      '/project/kubernetes/manifest.yml',
       '/project/src/app.controller.spec.ts',
       '/project/src/app.controller.ts',
       '/project/src/app.module.ts',
@@ -64,9 +71,15 @@ describe('Application Factory', () => {
   it('should manage name to dasherize', async () => {
     const options: ApplicationOptions = {
       name: 'awesomeProject',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: true,
-      persistence: false
+      persistence: false,
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -86,6 +99,7 @@ describe('Application Factory', () => {
       '/awesome-project/tsconfig.build.json',
       '/awesome-project/tsconfig.json',
       '/awesome-project/.vscode/launch.json',
+      '/awesome-project/kubernetes/manifest.yml',
       '/awesome-project/src/app.controller.spec.ts',
       '/awesome-project/src/app.controller.ts',
       '/awesome-project/src/app.module.ts',
@@ -110,10 +124,16 @@ describe('Application Factory', () => {
   it('should manage destination directory', async () => {
     const options: ApplicationOptions = {
       name: '@scope/package',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       directory: 'scope-package',
       transport: 'NATS',
       pure: true,
-      persistence: false
+      persistence: false,
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -133,6 +153,7 @@ describe('Application Factory', () => {
       '/scope-package/tsconfig.build.json',
       '/scope-package/tsconfig.json',
       '/scope-package/.vscode/launch.json',
+      '/scope-package/kubernetes/manifest.yml',
       '/scope-package/src/app.controller.spec.ts',
       '/scope-package/src/app.controller.ts',
       '/scope-package/src/app.module.ts',
@@ -157,9 +178,15 @@ describe('Application Factory', () => {
   it('should generate exception filter when not a pure app', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: false,
-      persistence: false
+      persistence: false,
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -173,10 +200,16 @@ describe('Application Factory', () => {
   it('should generate mongo config service when persistence is mongo', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: false,
       persistence: true,
-      persistenceDB: 'mongodb'
+      persistenceDB: 'mongodb',
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -190,10 +223,16 @@ describe('Application Factory', () => {
   it('should generate typeorm config service when persistence is mongo', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: false,
       persistence: true,
-      persistenceDB: 'postgresql'
+      persistenceDB: 'postgresql',
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -207,10 +246,16 @@ describe('Application Factory', () => {
   it('should create an hybrid app when pure is set to false', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: false,
       persistence: true,
-      persistenceDB: 'postgresql'
+      persistenceDB: 'postgresql',
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);
@@ -290,9 +335,15 @@ describe('Application Factory', () => {
   it('should create a pure microservice app when pure is set to true', async () => {
     const options: ApplicationOptions = {
       name: 'project',
+      author: 'Testing Author',
+      license: 'MIT',
+      port: 3000,
       transport: 'NATS',
       pure: true,
       persistence: false,
+      useSpinnaker: true,
+      spinnakerUrl: 'https://spinnaker.url.com/',
+      kubernetesNamespace: 'default'
     };
 
     jest.spyOn(inquirer, 'prompt').mockResolvedValueOnce(options);

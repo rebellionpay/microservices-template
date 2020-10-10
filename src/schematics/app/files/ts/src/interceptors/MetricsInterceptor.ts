@@ -1,4 +1,4 @@
-import { Injectable, Inject, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, Inject, NestInterceptor, ExecutionContext, CallHandler, HttpException } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { Logger } from 'winston';
@@ -35,10 +35,15 @@ export class MetricsInterceptor implements NestInterceptor {
         }),
         catchError((error) => {
           this.logger.error('[HTTP] | Error', error, info);
-          const response = context.switchToHttp().getResponse();
           responseTime = Date.now() - timeDate;
 
-          this.logger.error(`[HTTP] | ${response.statusCode} | [${method}] ${path} - ${responseTime}ms`, info);
+          let status = 500;
+
+          if(error instanceof HttpException) {
+            status = error.getStatus();
+          }
+
+          this.logger.error(`[HTTP] | ${status} | [${method}] ${path} - ${responseTime}ms`, info);
 
           return throwError(error);
         }),
@@ -47,7 +52,7 @@ export class MetricsInterceptor implements NestInterceptor {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
 
-            this.metrics.send('ms-auth',
+            this.metrics.send('<%= name >',
               {
                 statusCode,
                 method,
@@ -85,7 +90,7 @@ export class MetricsInterceptor implements NestInterceptor {
           }),
           finalize(() => {
             if(this.configService.get<string>('NODE_ENV') === 'production') {
-              this.metrics.send('ms-auth',
+              this.metrics.send('<%= name >',
                 { ...natsTopic, responseTime: Date.now() - timeDate }
               ).catch(err => {
                 this.logger.error('[METRICS] | Error sending metrics', err);
