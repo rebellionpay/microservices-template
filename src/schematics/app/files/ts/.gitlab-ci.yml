@@ -8,7 +8,7 @@
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID --cache=true --cache-ttl=720h
 
 variables:
   REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
@@ -38,15 +38,30 @@ test:
   before_script:
     - npm i
   script:
-    - npm run test
+    - npm run test:cov
+  artifacts:
+    reports:
+      cobertura:
+        coverage/cobertura-coverage.xml
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
+
+build:custom:
+  <<: *build_definition
+  before_script:
+    - envContent=ENV_$ORIGINAL_USER
+    - cat $(eval "echo \$$envContent") > .env
+  rules:
+    - if: $ORIGINAL_USER
+      when: always
 
 build:staging:
   <<: *build_definition
   before_script:
     - cat $ENV_STAGING > .env
   rules:
+    - if: $ORIGINAL_USER
+      when: never
     - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
     - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
 
@@ -68,7 +83,7 @@ build:production:
   tags:
     - docker
   script:
-    - curl --location --request POST "https://api.spinnaker.rebellionpay.com/webhooks/webhook/ms-payments" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"-"${CI_PIPELINE_ID}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
+    - curl --location --request POST "https://api.spinnaker.rebellionpay.com/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"-"${CI_PIPELINE_ID}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
   rules:
     - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
