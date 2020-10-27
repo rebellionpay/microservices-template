@@ -29,7 +29,7 @@ export class AppController {
     @Body() body: Record<string, any>,
     @Headers('x-request-id') reqId: string
   ): Promise<unknown> {
-    this.logger.info({ body, reqId });
+    this.logger.info(JSON.stringify(body), reqId);
     const response = await this.messageService.sendMessage({ cmd: 'YOUR_CMD' }, { data: body, metadata: { reqId } });
     return (await response.toPromise()).data;
   }

@@ -1,38 +1,43 @@
 import { format, transports, addColors,LoggerOptions } from "winston";
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 export class LoggerConfig {
   private readonly options: LoggerOptions;
 
-  private static stringifyInfo(info) {
-    if (!info) return '';
-    return info.reduce((acc, val) => acc + ' | ' + (typeof val === 'string' ? val : JSON.stringify(val)), '');
-  };
+  private static instance: LoggerConfig;
+ 
+  public static getInstance(): LoggerConfig {
+    if (!LoggerConfig.instance) {
+      LoggerConfig.instance = new LoggerConfig();
+    }
 
+    return LoggerConfig.instance;
+  }
 
-  private static formatRequest(value) {
-    if (!value) return null;
-    return `${value.reqId} | ${value.path || ''} ${value.user ? ` | user:${value.user}` : ''}`;
+  private stagingFormat() {
+    return format.combine(
+      format.colorize(),
+      format.timestamp(),
+      format.metadata({
+        fillExcept: ['message', 'level', 'timestamp', 'label']
+      }),
+      format.printf((info) => {
+        if(typeof info.message === 'object') {
+          info.message = JSON.stringify(info.message);
+        }
+
+        const reqId = info.metadata.reqId;
+        delete info.metadata.reqId;
+
+        return (`${info.level} | ${info.timestamp} ${reqId ? `| ${reqId}` : ''} | ${info.message} | ${JSON.stringify(info.metadata)}`);
+      })
+    );
   }
 
   constructor() {
     this.options = {
-      format: format.combine(
-        format.colorize(),
-        format.timestamp(),
-        format.printf((info) => {
-          const sym: symbol = Object.getOwnPropertySymbols(info).find((e) => Symbol.keyFor(e) === 'splat');
-          const extraInfo = info[sym as any];
-          let requestInfo;
-          if (extraInfo) {
-            const index = extraInfo.findIndex((obj) => obj && obj.reqId);
-            if (index !== -1) {
-              requestInfo = LoggerConfig.formatRequest(extraInfo[index]);
-              extraInfo.splice(index, 1);
-            }
-          }
-          return (`${info.level} | ${info.timestamp} ${requestInfo ? `| ${requestInfo}` : ''} | ${info.message} ${LoggerConfig.stringifyInfo(extraInfo)}`);
-        })
-      ),
+      format: process.env.NODE_ENV === 'production' ? format.logstash() : this.stagingFormat(),
       transports: [
         new transports.Console({
           level: 'silly', // TODO: Get value from configfile 
