@@ -1,4 +1,5 @@
-import { format, transports, addColors,LoggerOptions } from "winston";
+import { format, transports, addColors, LoggerOptions } from "winston";
+import { MESSAGE } from 'triple-beam';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -15,18 +16,20 @@ export class LoggerConfig {
     return LoggerConfig.instance;
   }
 
-  private stagingFormat() {
+  private defaultFormat() {
     return format.combine(
-      format.colorize(),
       format.timestamp(),
       format.metadata({
         fillExcept: ['message', 'level', 'timestamp', 'label']
-      }),
-      format.printf((info) => {
-        if(typeof info.message === 'object') {
-          info.message = JSON.stringify(info.message);
-        }
+      })
+    );
+  }
 
+  private stagingFormat() {
+    return format.combine(
+      this.defaultFormat(),
+      format.colorize(),
+      format.printf((info) => {
         const reqId = info.metadata.reqId;
         delete info.metadata.reqId;
 
@@ -35,9 +38,46 @@ export class LoggerConfig {
     );
   }
 
+  private productionFormat() {
+    return format.combine(
+      this.defaultFormat(),
+      format((info) => {
+        const reqId = info.metadata.reqId;
+        delete info.metadata.reqId;
+
+        info.reqId = reqId;
+
+        if (typeof info.message === 'object' && info.message !== null) {
+          info.message = JSON.stringify(info.message);
+        }
+
+        const { level, timestamp, label } = info;
+
+        const message = {
+          level,
+          timestamp,
+          label,
+          reqId,
+          metadata: info.metadata,
+          message: info.message
+        };
+
+        delete info.metadata;
+        delete info.message;
+        delete info.level;
+        delete info.timestamp;
+        delete info.label;
+
+        info[MESSAGE] = JSON.stringify(message);
+
+        return info;
+      })()
+    );
+  }
+
   constructor() {
     this.options = {
-      format: process.env.NODE_ENV === 'production' ? format.logstash() : this.stagingFormat(),
+      format: process.env.NODE_ENV === 'production' ? this.productionFormat() : this.stagingFormat(),
       transports: [
         new transports.Console({
           level: 'silly', // TODO: Get value from configfile 

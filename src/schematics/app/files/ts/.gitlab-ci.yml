@@ -92,7 +92,7 @@ build:production:
   before_script:
     - cat $ENV_PRODUCTION > .env
   rules:
-    - if: $CI_COMMIT_TAG == null && $CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]/
+    - if: $CI_COMMIT_TAG == null || ($CI_COMMIT_TAG != null && $CI_COMMIT_TAG !~ /^v[0-9]+\.[0-9]+\.[0-9]/)
       when: never
     - if: $CI_PIPELINE_SOURCE == "web"
 
@@ -119,7 +119,7 @@ notify-spinnaker:prodution:
   <<: *notify_spinnaker_definition
   needs: ["build:production"]
   rules:
-    - if: $CI_COMMIT_REF_SLUG !~ /^master?$/ && $CI_COMMIT_TAG == null
+    - if: $CI_COMMIT_TAG == null || ($CI_COMMIT_TAG != null && $CI_COMMIT_TAG !~ /^v[0-9]+\.[0-9]+\.[0-9]/)
       when: never
     - if: $CI_PIPELINE_SOURCE == "web"
 <% } %>
