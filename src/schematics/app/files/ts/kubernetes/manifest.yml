@@ -38,6 +38,9 @@ spec:
           image: ${ trigger['payload']['dockerImage'] }
           ports:
             - containerPort: <%= port %>
+          envFrom:
+            - secretRef:
+                name: <%= name %>
           resources:
             requests:
               cpu: 300m
