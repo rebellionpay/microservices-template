@@ -52,12 +52,13 @@ export class MetricsInterceptor implements NestInterceptor {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
 
-            this.metrics.send('<%= name >',
+            this.metrics.send('responseTime',
               {
+                ms: '<%= name >',
                 statusCode,
                 method,
                 path,
-                responseTime
+                value: responseTime
               }
             ).catch(err => {
               this.logger.error(`[METRICS] | Error sending metrics ${err}`, info);
@@ -90,8 +91,8 @@ export class MetricsInterceptor implements NestInterceptor {
           }),
           finalize(() => {
             if(this.configService.get<string>('NODE_ENV') === 'production') {
-              this.metrics.send('<%= name >',
-                { ...natsTopic, responseTime: Date.now() - timeDate }
+              this.metrics.send('responseTime',
+                { ms: '<%= name >', ...natsTopic, value: Date.now() - timeDate }
               ).catch(err => {
                 this.logger.error(`[METRICS] | Error sending metrics ${err}`, info);
               });
