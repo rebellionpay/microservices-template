@@ -43,7 +43,8 @@ eslint:
     # Run ESLint
     - node ./node_modules/eslint/bin/eslint "{src,apps,libs,test}/**/*.ts"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_SLUG != "master"
+    - if: $CI_PIPELINE_SOURCE == "web"
 
 test:
   image:
@@ -62,7 +63,8 @@ test:
       cobertura:
         coverage/cobertura-coverage.xml
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_SLUG != "master"
+    - if: $CI_PIPELINE_SOURCE == "web"
 
 build:custom:
   <<: *build_definition
@@ -82,6 +84,8 @@ build:staging:
     - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
 
 build:production:
+  variables:
+    REPOSITORY_URL: $ECR_URL_PROD/<%= name %>
   <<: *build_definition
   needs: ["test", "eslint"]
   rules:
@@ -109,6 +113,8 @@ notify-spinnaker:staging:
     - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
   
 notify-spinnaker:prodution:
+  variables:
+    REPOSITORY_URL: $ECR_URL_PROD/<%= name %>
   <<: *notify_spinnaker_definition
   needs: ["build:production"]
   rules:
