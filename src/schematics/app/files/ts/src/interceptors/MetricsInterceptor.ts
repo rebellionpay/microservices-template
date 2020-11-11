@@ -34,7 +34,7 @@ export class MetricsInterceptor implements NestInterceptor {
           this.logger.info(`[HTTP] | ${response.statusCode} | [${method}] ${path} - ${responseTime}ms`, info);
         }),
         catchError((error) => {
-          this.logger.error('[HTTP] | Error', error, info);
+          this.logger.error(`[HTTP] | Error ${error}`, info);
           responseTime = Date.now() - timeDate;
 
           let status = 500;
@@ -52,15 +52,16 @@ export class MetricsInterceptor implements NestInterceptor {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
 
-            this.metrics.send('<%= name >',
+            this.metrics.send('responseTime',
               {
+                ms: '<%= name >',
                 statusCode,
                 method,
                 path,
-                responseTime
+                value: responseTime
               }
             ).catch(err => {
-              this.logger.error('[METRICS] | Error sending metrics', err, info);
+              this.logger.error(`[METRICS] | Error sending metrics ${err}`, info);
             });
           }
         }),
@@ -76,25 +77,25 @@ export class MetricsInterceptor implements NestInterceptor {
         natsTopic = { cmd: income[1].args[0] };
       }
 
-      this.logger.info('[RCP] | in', income[0], natsTopic, info);
+      this.logger.info(`[RCP] | in ${JSON.stringify(income[0])} ${JSON.stringify(natsTopic)}`, info);
       return next
         .handle()
         .pipe(
           tap((result) => {
-            this.logger.info('[RCP] | out', result, income, info);
+            this.logger.info(`[RCP] | out ${JSON.stringify(result)} ${JSON.stringify(income)}`, info);
           }),
           catchError((err) => {
-            this.logger.error('[RCP] | Error', err, info);
+            this.logger.error(`[RCP] | Error ${err}`, info);
 
             return throwError(err);
           }),
           finalize(() => {
             if(this.configService.get<string>('NODE_ENV') === 'production') {
-              this.metrics.send('<%= name >',
-                { ...natsTopic, responseTime: Date.now() - timeDate }
+              this.metrics.send('responseTime',
+                { ms: '<%= name >', ...natsTopic, value: Date.now() - timeDate }
               ).catch(err => {
-                this.logger.error('[METRICS] | Error sending metrics', err);
-              });;
+                this.logger.error(`[METRICS] | Error sending metrics ${err}`, info);
+              });
             }
           }),
         );

@@ -8,7 +8,17 @@
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"credsStore\":\"ecr-login\"}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $REPOSITORY_URL:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-$CI_PIPELINE_ID --cache=true --cache-ttl=720h
+
+.notify_spinnaker_template: &notify_spinnaker_definition
+  image:
+    name: curlimages/curl:latest
+    entrypoint: [""]
+  stage: notify-spinnaker
+  tags:
+    - docker
+  script:
+    - curl --location --request POST "https://"$SPINNAKER_WEBHOOK_USER":"$SPINNAKER_WEBHOOK_PASSWORD"@api.spinnaker.rebellionpay.com/webhooks/webhook/<%= name %>" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"-"${CI_PIPELINE_ID}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
 
 variables:
   REPOSITORY_URL: $ECR_URL_PRE/<%= name %>
@@ -20,56 +30,95 @@ stages:
   <% if(useSpinnaker) { %>- notify-spinnaker<% } %>
 
 eslint:
+  image:
+    name: node:13-alpine
+    entrypoint: [""]
   stage: lint
+  needs: []
   tags:
-    - microservices
+    - docker
   before_script:
     - npm i
   script:
     # Run ESLint
     - node ./node_modules/eslint/bin/eslint "{src,apps,libs,test}/**/*.ts"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_SLUG != "master"
+    - if: $CI_PIPELINE_SOURCE == "web"
 
 test:
+  image:
+    name: node:13-alpine
+    entrypoint: [""]
   stage: test
+  needs: []
   tags:
-    - microservices
+    - docker
   before_script:
     - npm i
   script:
-    - npm run test
+    - npm run test:cov
+  artifacts:
+    reports:
+      cobertura:
+        coverage/cobertura-coverage.xml
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null && $CI_COMMIT_REF_SLUG != "master"
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+build:custom:
+  <<: *build_definition
+  rules:
+    - if: $ORIGINAL_USER
+      when: always
+    - if: $ORIGINAL_USER == null
+      when: never
 
 build:staging:
   <<: *build_definition
-  before_script:
-    - cat $ENV_STAGING > .env
+  needs: ["test", "eslint"]
   rules:
+    - if: $ORIGINAL_USER
+      when: never
     - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
     - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
 
 build:production:
+  variables:
+    REPOSITORY_URL: $ECR_URL_PROD/<%= name %>
   <<: *build_definition
-  before_script:
-    - cat $ENV_PRODUCTION > .env
+  needs: ["test", "eslint"]
   rules:
-    - if: $CI_COMMIT_REF_SLUG !~ /^master?$/ && $CI_COMMIT_TAG == null
+    - if: $CI_COMMIT_TAG == null || ($CI_COMMIT_TAG != null && $CI_COMMIT_TAG !~ /^v[0-9]+\.[0-9]+\.[0-9]/)
       when: never
     - if: $CI_PIPELINE_SOURCE == "web"
 
 <% if(useSpinnaker) { 
-%>notify-spinnaker:
-  image:
-    name: curlimages/curl:latest
-    entrypoint: [""]
-  stage: notify-spinnaker
-  tags:
-    - docker
-  script:
-    - curl --location --request POST "https://api.spinnaker.rebellionpay.com/webhooks/webhook/ms-payments" --header "Content-Type:application/json" --data-raw "{\"dockerImage\":\""${REPOSITORY_URL}":"${CI_COMMIT_REF_SLUG}"-"${CI_COMMIT_SHORT_SHA}"-"${CI_PIPELINE_ID}"\", \"gitlabUrl\":\""${CI_API_V4_URL}"\",\"projectId\":\""${CI_PROJECT_ID}"\", \"pipelineId\":\""${CI_PIPELINE_ID}"\", \"ref\":\""${CI_COMMIT_REF_NAME}"\", \"commitSHA\":\""${CI_COMMIT_SHA}"\", \"launchedBy\":\""${ORIGINAL_USER}"\"}"
+%>notify-spinnaker:custom:
+  <<: *notify_spinnaker_definition
+  needs: ["build:custom"]
   rules:
+    - if: $ORIGINAL_USER
+      when: always
+    - if: $ORIGINAL_USER == null
+      when: never
+
+notify-spinnaker:staging:
+  <<: *notify_spinnaker_definition
+  needs: ["build:staging"]
+  rules:
+    - if: $ORIGINAL_USER
+      when: never
     - if: $CI_COMMIT_REF_SLUG =~ /^dev(elopment)?$/
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
+    - if: $CI_PIPELINE_SOURCE == "triggers" || $CI_PIPELINE_SOURCE == "api"
+  
+notify-spinnaker:prodution:
+  variables:
+    REPOSITORY_URL: $ECR_URL_PROD/<%= name %>
+  <<: *notify_spinnaker_definition
+  needs: ["build:production"]
+  rules:
+    - if: $CI_COMMIT_TAG == null || ($CI_COMMIT_TAG != null && $CI_COMMIT_TAG !~ /^v[0-9]+\.[0-9]+\.[0-9]/)
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "web"
 <% } %>

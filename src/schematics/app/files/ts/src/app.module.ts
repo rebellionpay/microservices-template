@@ -38,6 +38,7 @@ export class AppModule {
       %>WinstonModule.forRoot(logger.console()),
       ConfigModule.forRoot({
         isGlobal: true,
+        ignoreEnvFile: true,
         validationSchema: JoiObject({
           NODE_ENV: JoiString()
             .valid('development', 'production', 'test')
