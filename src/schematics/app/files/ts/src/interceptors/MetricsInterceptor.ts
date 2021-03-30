@@ -39,7 +39,7 @@ export class MetricsInterceptor implements NestInterceptor {
 
           let status = 500;
 
-          if(error instanceof HttpException) {
+          if (error instanceof HttpException) {
             status = error.getStatus();
           }
 
@@ -48,7 +48,7 @@ export class MetricsInterceptor implements NestInterceptor {
           return throwError(error);
         }),
         finalize(() => {
-          if(this.configService.get<string>('NODE_ENV') === 'production') {
+          if (this.configService.get<string>('NODE_ENV') === 'production') {
             const response = context.switchToHttp().getResponse();
             const statusCode = response.statusCode;
 
@@ -74,23 +74,23 @@ export class MetricsInterceptor implements NestInterceptor {
       try {
         natsTopic = JSON.parse(income[1].args[0]);
       } catch (err) {
-        natsTopic = { cmd: income[1].args[0] };
+        natsTopic = { cmd: income[1].args[0] };
       }
 
-      this.logger.info(`[RCP] | in ${JSON.stringify(income[0])} ${JSON.stringify(natsTopic)}`, info);
+      this.logger.info(`[RPC] | in ${JSON.stringify(income[0])} ${JSON.stringify(natsTopic)}`, info);
       return next
         .handle()
         .pipe(
           tap((result) => {
-            this.logger.info(`[RCP] | out ${JSON.stringify(result)} ${JSON.stringify(income)}`, info);
+            this.logger.info(`[RPC] | out ${JSON.stringify(result)} ${JSON.stringify(income)}`, info);
           }),
           catchError((err) => {
-            this.logger.error(`[RCP] | Error ${err}`, info);
+            this.logger.error(`[RPC] | Error ${err}`, info);
 
             return throwError(err);
           }),
           finalize(() => {
-            if(this.configService.get<string>('NODE_ENV') === 'production') {
+            if (this.configService.get<string>('NODE_ENV') === 'production') {
               this.metrics.send('responseTime',
                 { ms: '<%= name >', ...natsTopic, value: Date.now() - timeDate }
               ).catch(err => {
